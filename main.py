@@ -1,12 +1,21 @@
 import tcod
 
+from actions import EscapeAction, MovementAction
+from input_handlers import EventHandler
+
 def main() -> None:
     screen_width, screen_height = 80, 50
+    
+    player_x = int(screen_width / 2)
+    player_y = int(screen_height / 2)
     
     # Load the font, which I for some reason called "assets.png"
     tileset = tcod.tileset.load_tilesheet(
         "assets.png", 32, 8, tcod.tileset.CHARMAP_TCOD
     )
+    
+    # Out event handler!
+    event_handler = EventHandler()
     
     # This creates the screen! Dang
     with tcod.context.new_terminal(
@@ -27,17 +36,28 @@ def main() -> None:
             
             # Every frame, print the current game state
             root_console.print(
-                x = 1,
-                y = 1,
+                x = player_x,
+                y = player_y,
                 string = "@"
             )
             
             context.present(root_console)
+            root_console.clear()
             
-            # Event listener?
             for event in tcod.event.wait():
-                if event.type == "QUIT":
+                action = event_handler.dispatch(event)
+                
+                print(action)
+                
+                if action is None:
+                    continue
+                
+                if isinstance(action, MovementAction):
+                    player_x += action.dx
+                    player_y += action.dy
+                elif isinstance(action, EscapeAction):
                     raise SystemExit()
+                
 
 
 if __name__ == "__main__":
